@@ -1,49 +1,75 @@
-<button (click)="connect()">Conectar</button>
-<div class="flex flex-row w-full h-full">
-  <div class="flex flex-col w-1/3 text-red">
-    @for (item of rooms$ | async; track $index) {
-      <div class="flex flex-col w-full border p-4 hover:bg-slate-200" (click)="onSelectRoom(item)">
+<div class="w-full h-full p-5 bg-neutral-800 ">
+  <button (click)="connect()"
+    [ngClass]="
+    status ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
+    [title]="status ? 'Online' : 'Offline'"
+    class="mb-3 p-3 rounded-full text-white hover:transition-colors transition-colors relative">
+    {{ !status ? 'Conectar' : 'Desconectar' }}
+  </button>
+
+  
+  <div class="flex flex-row w-full h-5/6  ">
+    <!-- Listas de salas -->
+    <div class="flex flex-col w-3/12 text-red h-full bg-emerald-800 relative ">
+    <div class="overflow-auto">
+      @for (item of rooms; track $index) {
+      <div class="flex flex-col w-full border-b p-4 text-white hover:bg-emerald-700 "
+        (click)="onSelectRoom(item)">
         <div class="flex flex-row w-full">
-          <b>Sala {{item.name}}</b>
+          <b>Sala {{ item.name }}</b>
         </div>
         <div class="flex flex-row w-full">
-          {{item.numberOfParticipants}} participantes activos
+          {{ item.numberOfParticipants }} participantes activos
         </div>
         <div class="flex flex-row w-full">
-          <button (click)="connect()">
-            Conectar
-          </button>
+          <button (click)="connect()">Conectar</button>
         </div>
       </div>
-    }
-  </div>
-  <div class="flex flex-col w-1/3 bg-red p-4">
-    Chat
-    <div class="flex flex-col h-full">
-      @if (currentRoom) {
-        @for (item of currentRoom.messageHistory; track $index) {
-        <div class="flex flex-row w-full border" [ngClass]="getMessageClass(item)">
+      }
+      </div>
+      <button class="flex flex-row justify-center items-center rounded-full p-5 bg-sky-500 text-white hover:bg-sky-600 absolute end-5 bottom-5" (click)="createRoom()">
+        <mat-icon style="color: white;">add</mat-icon>
+      </button>
+    </div>
+
+    <!-- Espacio de chat -->
+    <div class="flex flex-col justify-between w-6/12 h-full bg-emerald-500 p-4 text-white overflow-auto">
+      Chat
+      <div class="flex flex-col h-full bg-slate-400">
+        @if (currentRoom) { @for (item of currentRoom.messageHistory; track
+        $index) {
+        <div class="flex flex-row w-full" [ngClass]="getMessageClass(item)">
           {{ item.content }}
         </div>
-        }
+        } }
+      </div>
+      <form class="w-full flex flex-row justify-center justify-self-end" (submit)="sendMessage()">
+        <div class="w-full">
+          <mat-form-field class="w-full">
+            <mat-label>Message</mat-label>
+            <input matInput placeholder="Type a message" [(ngModel)]="message" name="message" required>
+          </mat-form-field>
+        </div>
+        
+        <button style="height: 3.48rem; font-size: large;" mat-raised-button color="primary" type="submit">
+          <mat-icon>send</mat-icon>
+        </button>
+      </form>
+    </div>
+    <!-- Noticaciones -->
+    <div class="flex flex-col w-3/12 h-full bg-emerald-800 overflow-auto items-center text-white">
+      Notificaciones @for (item of notifications; track $index) {
+      <div class="flex flex-row w-80 p-4 border rounded-xl my-2 bg-emerald-700 text-white">
+        <div class="flex flex-col w-full">
+          <div class="flex flex-row w-full">
+            {{ $index + 1 }}. {{ item.message }}
+          </div>
+          <div class="flex flex-row justify-end w-full">
+            {{ item.date }}
+          </div>
+        </div>
+      </div>
       }
     </div>
   </div>
-  <div class="flex flex-col w-1/3">
-    Notificaciones
-    @for (item of notifications; track $index) {
-      <div class="flex flex-row p-4 border rounded-full my-2 hover:bg-slate-100">
-        <div class="flex flex-col w-full">
-          <div class="flex flex-row w-full">
-            {{$index + 1}}. {{item.message}}
-          </div>
-          <div class="flex flex-row justify-end w-full">
-            {{item.date | date: 'dd/MM/yyyy'}}
-          </div>
-
-        </div>
-      </div>
-    }
-  </div>
-
 </div>
