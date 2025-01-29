@@ -95,7 +95,7 @@ io.on('connection', (socket: Socket) => {
     const dateTime = new Date();
     socket.broadcast.emit(TopicsToSend.GENERAL_NOTIFICAITON, {
       message,
-      date: dateTime.toLocaleDateString() + ' ' + dateTime.toLocaleTimeString()
+      date: dateTime
     });
   });
 

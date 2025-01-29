@@ -50,6 +50,11 @@ export class AppComponent implements OnInit {
     }
   }
 
+  onLeaveRoom() {
+    this.currentRoom = undefined;
+  }
+
+
   public onSelectRoom(room: Room) {
     if (this.currentRoom && this.currentRoom.name === room.name) {
       // Si ya estás en la sala, no hacer nada

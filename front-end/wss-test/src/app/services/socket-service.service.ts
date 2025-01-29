@@ -60,8 +60,6 @@ export class SocketServiceService {
     this.io?.emit('CREATE_ROOM', JSON.stringify({ name }));
   }
 
-  public joinRoom(room: string, username: string) {
-    this.io?.emit('JOIN_ROOM', JSON.stringify({ room, username }));
-  }
+
 
 }
