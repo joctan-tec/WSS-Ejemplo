@@ -9,7 +9,7 @@ import { SendMessageUseCase } from './businessLogic/SendMessage.useCase';
 import { JoinRoomHandler } from './businessLogic/JoinRoom.useCase';
 import { LeaveRoomHandler } from './businessLogic/LeaveRoom.useCase';
 import { CreateRoomHandler } from './businessLogic/CreateRoom.useCase';
-import { GeneralGroups, RequestsTopics } from './constants';
+import { GeneralGroups, RequestsTopics, TopicsToSend } from './constants';
 import { PictochatUser } from './domain/user/user.model';
 
 // Routes
@@ -60,7 +60,6 @@ io.on('connection', (socket: Socket) => {
   socket.on(RequestsTopics.CREATE_ROOM, (createRoomRequest) => {
     const roomRepository = new RoomRepository();
     const createRoomHandler = new CreateRoomHandler(socket, roomRepository);
-
     createRoomHandler.handle({ name: JSON.parse(createRoomRequest).name });
   });
 
@@ -92,9 +91,15 @@ io.on('connection', (socket: Socket) => {
     });
   });
 
-  socket.on('GENERAL_NOTIFICATION', () => {
-    socket.broadcast.emit('HOLA MUNDO');
-  })
+  socket.on(GeneralGroups.GENERAL_NOTIFICATIONS, (message) => {
+    const dateTime = new Date();
+    socket.broadcast.emit(TopicsToSend.GENERAL_NOTIFICAITON, {
+      message,
+      date: dateTime.toLocaleDateString() + ' ' + dateTime.toLocaleTimeString()
+    });
+  });
+
+
 });
 
 httpServer.listen(PORT, () => {
