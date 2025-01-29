@@ -9,42 +9,26 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from "@angular/forms"
 import { MatInput } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import {MatIconModule} from '@angular/material/icon';
-
-
-export enum RequestsTopics {
-  ASSIGN_USER = 'ASSIGN_USER',
-  JOIN_ROOM = 'JOIN_ROOM',
-  CREATE_ROOM = 'CREATE_ROOM',
-  LEAVE_ROOM = 'LEAVE_ROOM',
-  NEW_MESSAGE = 'NEW_MESSAGE'
-}
-
-export enum GeneralGroups {
-  GENERAL_NOTIFICATIONS = 'GENERAL_NOTIFICATIONS'
-}
-
-export enum TopicsToSend {
-  GENERAL_NOTIFICAITON = 'GENERAL_NOTIFICATION',
-  ROOM_CREATED = 'ROOM_CREATED'
-}
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, MatButtonModule, FormsModule, MatInput, MatFormFieldModule, MatIconModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   rooms: Room[] = [];
   currentRoom?: Room;
   status = false;
-  message = '';	
+  message = '';
+  username = 'Juan';
+  public joinSuccess: boolean | null = null;
 
   notifications: { message: string, date: Date }[] = []
 
-  public constructor(
+  constructor(
     private readonly socketService: SocketServiceService,
     private readonly _roomService: RoomServiceService
   ) {
@@ -53,11 +37,9 @@ export class AppComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    
-  }
+  ngOnInit(): void {}
 
-  sendMessage(){
+  sendMessage() {
     console.log('Sending message');
   }
 
@@ -66,13 +48,22 @@ export class AppComponent implements OnInit {
     if (roomName) {
       this.socketService.createRoom(roomName);
     }
-    
   }
 
   public onSelectRoom(room: Room) {
-    this.currentRoom = this.currentRoom === undefined || this.currentRoom.name !== room.name
-      ? room
-      : undefined;
+    if (this.currentRoom && this.currentRoom.name === room.name) {
+      // Si ya estás en la sala, no hacer nada
+      return;
+    }
+
+    if (this.currentRoom) {
+      // Si ya hay una sala actual, salimos de esa sala
+      //llamar a salir de la sala;
+    }
+
+    // Establecer la sala actual
+    this.currentRoom=room;
+    this.socketService.joinRoom( this.currentRoom!.name, this.username); // Unirse a la nueva sala
   }
 
   public getMessageClass(message: PictochatMessage) {
@@ -83,8 +74,7 @@ export class AppComponent implements OnInit {
   }
 
   public connect() {
-
-    this.socketService.connect();
+    this.socketService.connect(this.username);
     this.status = true;
 
     this.socketService.newNotification.subscribe((notification) => {
@@ -95,9 +85,10 @@ export class AppComponent implements OnInit {
       this.rooms.push(room);
     });
 
-    
+    this.socketService.userJoinedRoom.subscribe((success: boolean) => {
+      this.joinSuccess = success;  // Actualizar el estado de la unión
+    });
   }
-
 
   title = 'wss-test-2';
 }
