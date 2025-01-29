@@ -46,12 +46,6 @@ export class SocketServiceService {
   public createRoom(name: string) {
     this.io?.emit('CREATE_ROOM', JSON.stringify({ name }));
   }
-
-
-
-
-
-  // Capta cuando llega notifiacion GENERAL_NOTIFICATION
   
 
 

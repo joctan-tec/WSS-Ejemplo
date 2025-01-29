@@ -69,6 +69,11 @@ export class AppComponent implements OnInit {
     
   }
 
+  onLeaveRoom() {
+    this.currentRoom = undefined;
+  }
+
+
   public onSelectRoom(room: Room) {
     this.currentRoom = this.currentRoom === undefined || this.currentRoom.name !== room.name
       ? room
