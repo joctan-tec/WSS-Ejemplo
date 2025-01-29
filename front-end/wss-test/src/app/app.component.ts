@@ -79,20 +79,25 @@ export class AppComponent implements OnInit {
   }
 
   public connect() {
-    this.socketService.connect(this.username);
-    this.status = true;
 
-    this.socketService.newNotification.subscribe((notification) => {
-      this.notifications.push(notification);
-    });
+    const username = prompt('Por favor, ingresa tu nombre:');
+    if(username){
+      this.username=username
+      this.socketService.connect(this.username);
+      this.status = true;
 
-    this.socketService.roomCreated.subscribe((room: Room) => {
-      this.rooms.push(room);
-    });
+      this.socketService.newNotification.subscribe((notification) => {
+        this.notifications.push(notification);
+      });
 
-    this.socketService.userJoinedRoom.subscribe((success: boolean) => {
-      this.joinSuccess = success;  // Actualizar el estado de la unión
-    });
+      this.socketService.roomCreated.subscribe((room: Room) => {
+        this.rooms.push(room);
+      });
+
+      this.socketService.userJoinedRoom.subscribe((success: boolean) => {
+        this.joinSuccess = success;  // Actualizar el estado de la unión
+      });
+    }
   }
 
   title = 'wss-test-2';
