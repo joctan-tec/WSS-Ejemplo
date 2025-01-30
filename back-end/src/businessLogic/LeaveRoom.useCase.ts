@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { UserRepository } from "../database/user.database";
 import { RoomRepository } from "../database/room.repository";
+import { TopicsToSend } from "../constants";
 
 export type LeaveRoomCommand = {
   username: string;
@@ -19,14 +20,11 @@ export class LeaveRoomHandler {
   }
 
   public handle(command: LeaveRoomCommand): LeaveRoomResult {
-    // TODO: implement
     const { username }  = command;
     
     //Obtener usuario
-    const user = this._userRepository.getUserByCriteria(
-      (user) => user.username === username
-    );
-
+    const user = this._userRepository.getUsers().find((user) => user.username === command.username);
+    
     //Validar el usuario exista
     if (!user || !user.currentRoom){ 
       return { success: false };
@@ -34,24 +32,44 @@ export class LeaveRoomHandler {
 
     //Obtener la sala
     const room = this._roomRepository.getRoomByName(user.currentRoom!);
-
     
+
     // Validar que la room exista
     if (!room){
       return { success: false };
     }
     
-    // Quitarle un participante a la sala
-    room.numberOfParticipants -= 1;
+    // Guardar el nombre de la sala del usuario antes de limpiarlo
+    const roomName = user.currentRoom; 
     
-    //implementar la logica de salir de la sala
+    // Quitarle un participante a la sala
+    room.numberOfParticipants --;
+
+    //Implementar la logica de salir de la sala
     this._socket.leave(user.currentRoom!);
 
-    //Actualizar el usuario
+    // Actualizar el usuario
     user.currentRoom = undefined;
 
-    //Mandar el mensaje de que alguien un usuario ha salido
-    this._socket.to(user.currentRoom!).emit('USER_LEFT', user.username);
+    // Emitir el evento a todos los usuarios en la sala (y al mismo usuario)
+    this._socket.to(roomName!).emit('USER_LEFT', user.username);
+    this._socket.emit('USER_LEFT', user.username);
+
+
+    // Enviar una notificación general
+    this._socket.to(roomName!).emit(TopicsToSend.GENERAL_NOTIFICAITON, {
+      message: `User ${username} left room ${roomName}`,
+      date: new Date(),
+    });
+    this._socket.emit(TopicsToSend.GENERAL_NOTIFICAITON, {
+      message: `User ${username} left room ${roomName}`,
+      date: new Date(),
+    });
+
+    // Actualizar las salas
+    this._socket.broadcast.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+    this._socket.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+
     return { success: true };
   }
 }

@@ -25,6 +25,7 @@ export class AppComponent implements OnInit {
   message = '';
   username = 'Juan';
   public joinSuccess: boolean | null = null;
+  public leaveSuccess: boolean | null = null;
 
   notifications: { message: string, date: Date }[] = []
 
@@ -51,7 +52,12 @@ export class AppComponent implements OnInit {
   }
 
   onLeaveRoom() {
-    this.currentRoom = undefined;
+    if (this.currentRoom) {
+      this.socketService.leaveRoom(this.username);
+      console.log('Leaving room');
+      this.currentRoom = undefined;
+    }
+
   }
 
 
@@ -89,7 +95,7 @@ export class AppComponent implements OnInit {
           return;
         }
 
-        this.username=username
+      this.username=username
       this.socketService.connect(this.username);
       this.status = true;
       
@@ -111,7 +117,13 @@ export class AppComponent implements OnInit {
         this.currentRoom = rooms.find((room) => room.name === this.currentRoom?.name);
       });
 
+      this.socketService.userLeftRoom.subscribe((username) => {
+        this.leaveSuccess = true;
       });
+
+
+      });
+
 
       
       
