@@ -37,6 +37,9 @@ export class JoinRoomHandler {
         return { success: false };
       }
 
+      // Actualizar la sala actual del usuario
+      user.currentRoom = command.room;
+      
       // Incrementar el número de participantes en la sala
       room.numberOfParticipants++;
 
@@ -48,9 +51,6 @@ export class JoinRoomHandler {
       this._socket.emit("USER_JOINED_ROOM", true);  // Emitir al propio usuario
       
       // Enviar una notificación general
-
-      
-      
       this._socket.emit(TopicsToSend.GENERAL_NOTIFICAITON, {
         message: `User ${command.username} joined room ${command.room}`,
         date: new Date(),
