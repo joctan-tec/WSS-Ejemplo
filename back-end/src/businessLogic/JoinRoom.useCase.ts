@@ -1,5 +1,7 @@
 import { Socket } from "socket.io";
 import { UserRepository } from "../database/user.database";
+import { PictochatMessage } from "../domain/message/message.model";
+import { MessageType } from "../domain/message/messageType.enum";
 import { TopicsToSend } from "../constants";
 import { RoomRepository } from "../database/room.repository";
 
@@ -31,31 +33,42 @@ export class JoinRoomHandler {
     }
 
     try {
-      this._socket.join(command.room)
+      
       const room = this._roomRepository.getRoomByName(command.room);
       if (!room) {
         return { success: false };
       }
-
-      // Actualizar la sala actual del usuario
+      this._socket.join(command.room);
       user.currentRoom = command.room;
-      
+
       // Incrementar el número de participantes en la sala
       room.numberOfParticipants++;
 
-      this._socket.broadcast.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
-      this._socket.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+      
     
       // Emitir el evento a todos los usuarios en la sala (y al mismo usuario)
-      this._socket.to(command.room).emit("USER_JOINED_ROOM", true);
-      this._socket.emit("USER_JOINED_ROOM", true);  // Emitir al propio usuario
-      
-      // Enviar una notificación general
-      this._socket.emit(TopicsToSend.GENERAL_NOTIFICAITON, {
-        message: `User ${command.username} joined room ${command.room}`,
+      this._socket.to(command.room).emit("USER_JOINED_ROOM", {
+        message: `${command.username} se ha unido a la sala`,
         date: new Date(),
       });
-      this._socket.to(command.room).emit('NEW_MESSAGES', {message: 'User has joined the room', username: command.username})
+      this._socket.emit("USER_JOINED_ROOM", {
+        message: `Te has unido a la sala ${command.room}`,
+        date: new Date(),
+      });  // Emitir al propio usuario
+
+      // Agregar mensaje al historial de mensajes de la sala
+      const message: PictochatMessage = {
+        content: `${user.username} se ha unido a la sala`,
+        messageType: MessageType.notification,
+        sent: new Date(),
+        sentBy: user,
+      };
+
+      room.messageHistory.push(message);
+
+      this._socket.broadcast.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+      this._socket.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+
 
       return { success: true };
     } catch (error) {

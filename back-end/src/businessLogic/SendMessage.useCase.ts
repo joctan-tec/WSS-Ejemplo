@@ -2,6 +2,8 @@ import { UserRepository} from './../database/user.database';
 import { Socket } from "socket.io";
 import { PictochatMessage } from "../domain/message/message.model";
 import { MessageType } from "../domain/message/messageType.enum";
+import { Room } from '../domain/room/room.model';
+import { RoomRepository } from '../database/room.repository';
 
 export type SendMessageCommand = {
   content: string;
@@ -16,11 +18,13 @@ export type SendMessageResult = {
 export class SendMessageUseCase {
   private socket:Socket;
   private userRepository:UserRepository;
+  private roomRepository: RoomRepository;
 
-  public constructor(socket:Socket,UserRepository:UserRepository) 
+  public constructor(socket:Socket,UserRepository:UserRepository, romRepository: RoomRepository) 
   { 
     this.socket=socket;
     this.userRepository=UserRepository;
+    this.roomRepository=romRepository;
   }
 
   public handle(command: SendMessageCommand): SendMessageResult {
@@ -28,13 +32,22 @@ export class SendMessageUseCase {
     if (!user) {
       throw new Error('User not found');
     }
+
+    const room = this.roomRepository.getRoomByName(user.currentRoom??"");
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
     const message: PictochatMessage = {
       messageType: MessageType.direct_message,
       content: command.content,
       sent: new Date(),
       sentBy: user
     };
-    this.socket.to(user.currentRoom??"").emit('NEW_MESSAGE', message);
+    room.messageHistory.push(message);
+    this.socket.broadcast.emit('ROOMS_UPDATED', this.roomRepository.getRooms());
+    this.socket.emit('ROOMS_UPDATED', this.roomRepository.getRooms());
+    
     return { success: true };
   }
 }
