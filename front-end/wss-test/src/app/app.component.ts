@@ -82,9 +82,17 @@ export class AppComponent implements OnInit {
 
     const username = prompt('Por favor, ingresa tu nombre:');
     if(username){
-      this.username=username
+      this._roomService.existsUser(username).subscribe((exists) => {
+        console.log(exists);
+        if (exists.exists) {
+          alert('El usuario ya existe');
+          return;
+        }
+
+        this.username=username
       this.socketService.connect(this.username);
       this.status = true;
+      
 
       this.socketService.newNotification.subscribe((notification) => {
         this.notifications.push(notification);
@@ -97,6 +105,16 @@ export class AppComponent implements OnInit {
       this.socketService.userJoinedRoom.subscribe((success: boolean) => {
         this.joinSuccess = success;  // Actualizar el estado de la unión
       });
+
+      this.socketService._roomsUpdated.subscribe((rooms: Room[]) => {
+        this.rooms = rooms;
+        this.currentRoom = rooms.find((room) => room.name === this.currentRoom?.name);
+      });
+
+      });
+
+      
+      
     }
   }
 

@@ -65,9 +65,11 @@ io.on('connection', (socket: Socket) => {
 
   socket.on(RequestsTopics.JOIN_ROOM, (roomRequeststr) => {
     const userRepository = new UserRepository();
-    const joinRoomHandler = new JoinRoomHandler(socket, userRepository);
+    const roomRepository = new RoomRepository();
+    const joinRoomHandler = new JoinRoomHandler(socket, userRepository, roomRepository);
     const roomRequest = JSON.parse(roomRequeststr);
-    joinRoomHandler.handle({ room: roomRequest.room, username: roomRequest.username });
+    const response = joinRoomHandler.handle({ room: roomRequest.room, username: roomRequest.username });
+
   });
 
   socket.on(RequestsTopics.LEAVE_ROOM, (leaveRequest) => {

@@ -11,6 +11,7 @@ export class SocketServiceService {
   // Event emitters
   public readonly _newNotification: EventEmitter<{ message: string, date: Date }> = new EventEmitter();
   public readonly _roomCreated: EventEmitter<Room[]> = new EventEmitter<Room[]>();
+  public readonly _roomsUpdated: EventEmitter<Room[]> = new EventEmitter<Room[]>();
   public readonly _userJoinedRoom: EventEmitter<boolean> = new EventEmitter();
 
   constructor() { }
@@ -31,8 +32,12 @@ export class SocketServiceService {
       });
 
       // Escuchar cuando se crea una sala
-      this.io.on('ROOM_CREATED', (room) => {
-        this._roomCreated.emit(room);
+      this.io.on('ROOM_CREATED', (rooms) => {
+        this._roomCreated.emit(rooms);
+      });
+
+      this.io.on('ROOMS_UPDATED', (rooms) => {
+        this._roomsUpdated.emit(rooms);
       });
 
       // Escuchar cuando un usuario se une a una sala
@@ -50,6 +55,8 @@ export class SocketServiceService {
   public get roomCreated() {
     return this._roomCreated;
   }
+
+  
 
   public get userJoinedRoom() {
     return this._userJoinedRoom;
