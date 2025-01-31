@@ -41,6 +41,9 @@ export class JoinRoomHandler {
       this._socket.join(command.room);
       user.currentRoom = command.room;
 
+      // Actualizar la sala actual del usuario
+      user.currentRoom = command.room;
+      
       // Incrementar el número de participantes en la sala
       room.numberOfParticipants++;
 

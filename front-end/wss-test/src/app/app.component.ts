@@ -23,7 +23,9 @@ export class AppComponent implements OnInit {
   currentRoom?: Room;
   status = false;
   message = '';
-  username = 'Juan';
+  username = '';
+  public joinSuccess: boolean | null = null;
+  public leaveSuccess: boolean | null = null;
 
   notifications: { message: string, date: Date }[] = []
 
@@ -67,7 +69,12 @@ export class AppComponent implements OnInit {
   }
 
   onLeaveRoom() {
-    this.currentRoom = undefined;
+    if (this.currentRoom) {
+      this.socketService.leaveRoom(this.username);
+      console.log('Leaving room');
+      this.currentRoom = undefined;
+    }
+
   }
 
 
@@ -91,12 +98,12 @@ export class AppComponent implements OnInit {
 
   public getMessageClass(message: PictochatMessage) {
     if (message.messageType === MessageType.notification) {
-      return ['justify-center bg-sky-600  text-white'];
+      return ['justify-center', 'bg-sky-600', 'text-white'];
     }
     if (message.sentBy?.username === this.username) {
-      return ['bg-emerald-400 text-white'];
+      return ['bg-emerald-400', 'text-white'];
     }else{
-      return ['bg-gray-400 text-white'];
+      return ['bg-gray-400', 'text-white'];
     }
     
   }
@@ -112,7 +119,7 @@ export class AppComponent implements OnInit {
           return;
         }
 
-        this.username=username
+      this.username=username
       this.socketService.connect(this.username);
       this.status = true;
       
@@ -138,6 +145,10 @@ export class AppComponent implements OnInit {
         if (this.currentRoom && message.sentBy && this.currentRoom.name === message.sentBy.currentRoom) {
           this.currentRoom.messageHistory.push(message);
         }
+      });
+
+      this.socketService.userLeftRoom.subscribe((username) => {
+        this.leaveSuccess = true;
       });
 
 
