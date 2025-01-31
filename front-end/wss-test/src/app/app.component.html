@@ -1,7 +1,7 @@
 <div class="w-full h-full p-5 bg-neutral-800 ">
   <div class="flex flex-row w-full p-2 items-center justify-between">
 
-    <button (click)="connect()"
+    <button (click)="manageConnectButton()"
     [ngClass]="
     status ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
     [title]="status ? 'Online' : 'Offline'"

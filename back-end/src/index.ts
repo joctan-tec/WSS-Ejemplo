@@ -41,11 +41,34 @@ const io = new Server(httpServer, {
     credentials: true
   }
 });
+
+
+
 io.on('connection', (socket: Socket) => {
   const { id } = socket;
 
   console.log(`Connected ${id}`);
   socket.join(GeneralGroups.GENERAL_NOTIFICATIONS);
+
+  socket.on('USER_DISCONNECT', () => {
+    const userRepository = new UserRepository();
+    const roomRepository = new RoomRepository();
+    console.log(`User requested disconnection: ${socket.id}`);
+  
+    const user = userRepository.getUsers().find((u) => u.socketId === socket.id);
+    if (user) {
+      const room = roomRepository.getRooms().find((r) => r.name === user.currentRoom);
+      if (room) {
+        room.numberOfParticipants -= 1;
+        socket.leave(room.name); // Asegurar que abandona la sala
+        socket.broadcast.emit('ROOMS_UPDATED', roomRepository.getRooms());
+      }
+      
+    }
+  
+    socket.disconnect();
+  });
+  
 
 
   socket.on(RequestsTopics.ASSIGN_USER, (createUserRequest) => {

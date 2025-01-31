@@ -21,6 +21,7 @@ export class SocketServiceService {
 
   // Método de conexión al socket
   public connect(username: string) {
+    
     if (!this.io) {
       console.log('Connecting...');
       this.io = io('http://localhost:3000');
@@ -56,6 +57,14 @@ export class SocketServiceService {
       this.io.on('USER_LEFT', (username) => {
         this._userLeftRoom.emit(username);
       });
+    }
+  }
+
+  public disconnect() {
+    if (this.io) {
+      this.io.emit('USER_DISCONNECT', { socketId: this.io.id }); // 🔹 Notificar al servidor
+      this.io.disconnect();
+      this.io = undefined;
     }
   }
 

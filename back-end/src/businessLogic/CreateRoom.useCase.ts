@@ -53,6 +53,9 @@ export class CreateRoomHandler {
     });
 
     this._socket.emit(TopicsToSend.ROOM_CREATED, room);
+    this._socket.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+    this._socket.broadcast.emit('ROOMS_UPDATED', this._roomRepository.getRooms());
+
     return { room };
   }
 }

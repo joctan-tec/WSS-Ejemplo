@@ -33,9 +33,6 @@ export class AppComponent implements OnInit {
     private readonly socketService: SocketServiceService,
     private readonly _roomService: RoomServiceService
   ) {
-    this._roomService.getRooms().subscribe((rooms) => {
-      this.rooms = rooms;
-    });
   }
 
   ngOnInit(): void {}
@@ -68,31 +65,28 @@ export class AppComponent implements OnInit {
     }
   }
 
-  onLeaveRoom() {
+  async onLeaveRoom(): Promise<void> {
     if (this.currentRoom) {
-      this.socketService.leaveRoom(this.username);
+      await this.socketService.leaveRoom(this.username); // Asegurar que leaveRoom termine
       console.log('Leaving room');
       this.currentRoom = undefined;
     }
-
   }
-
-
-  public onSelectRoom(room: Room) {
+  
+  public async onSelectRoom(room: Room): Promise<void> {
     if (this.currentRoom && this.currentRoom.name === room.name) {
-      // Si ya estás en la sala, no hacer nada
-      return;
+      return; // Ya estás en la misma sala, no hacer nada
     }
-
+  
     if (this.currentRoom) {
-      // Si ya hay una sala actual, salimos de esa sala
-      //llamar a salir de la sala;
+      await this.onLeaveRoom(); // Esperar a que se complete leaveRoom
     }
-
-    // Establecer la sala actual
-    this.currentRoom=room;
-    this.socketService.joinRoom( this.currentRoom!.name, this.username); // Unirse a la nueva sala
+  
+    // Establecer la nueva sala
+    this.currentRoom = room;
+    this.socketService.joinRoom(this.currentRoom!.name, this.username); // Unirse a la nueva sala
   }
+  
 
 
 
@@ -108,7 +102,17 @@ export class AppComponent implements OnInit {
     
   }
 
+  public manageConnectButton() {
+    if (this.status) {
+      this.disconnect();
+    } else {
+      this.connect();
+    }
+  }
+
   public connect() {
+
+    
 
     const username = prompt('Por favor, ingresa tu nombre:');
     if(username){
@@ -151,6 +155,10 @@ export class AppComponent implements OnInit {
         this.leaveSuccess = true;
       });
 
+      this._roomService.getRooms().subscribe((rooms) => {
+        this.rooms = rooms;
+      });
+
 
       });
 
@@ -158,6 +166,16 @@ export class AppComponent implements OnInit {
       
       
     }
+  }
+
+  public disconnect() {
+    this.socketService.disconnect();
+    this.status = false;
+    this.currentRoom = undefined;
+    this.notifications = [];
+    this.rooms = [];
+    this.username = '';
+    
   }
 
   title = 'wss-test-2';
