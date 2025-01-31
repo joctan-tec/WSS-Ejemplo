@@ -49,11 +49,19 @@
           <b>Selecciona una sala para ver los mensajes</b>
         }
       </div>
-      <div class="flex flex-col h-full bg-slate-400 mb-2 rounded-lg p-4 overflow-auto">
+      <div class="flex flex-col h-full  mb-2 rounded-lg p-4 overflow-auto" #scrollContainer>
         @if (currentRoom) { @for (item of currentRoom.messageHistory; track
         $index) {
-        <div class="flex flex-row w-full" [ngClass]="getMessageClass(item)">
+        <div class="flex flex-row w-full relative mb-5 p-4 rounded-lg shadow-md" [ngClass]="getMessageClass(item)">
           {{ item.content }}
+
+          <span class="absolute -top-3 px-3 rounded-t-lg  start-5"
+          [ngClass]="getMessageClass(item)"   
+          *ngIf="item.messageType == 'direct_message'">{{item.sentBy?.username === this.username ? 'Tú' : item.sentBy?.username}}</span>
+          <span class="absolute -bottom-3 end-5 px-3 rounded-b-lg"
+          [ngClass]="getMessageClass(item)"
+          >{{item.sent | date: 'dd/MM/yyyy HH:MM:SS' }}</span>
+
         </div>
         } }
       </div>
@@ -61,8 +69,8 @@
         <div class="w-full">
           <mat-form-field class="w-full">
             <mat-label>Message</mat-label>
-            <input matInput placeholder="Type a message" [(ngModel)]="message" name="message" required />
-            <button style="font-size: large;" mat-fab color="primary" type="submit" matSuffix>
+            <textarea (keyup.enter)="sendMessage()"  matInput placeholder="Type a message" [(ngModel)]="message" name="message" #messageInput></textarea>
+            <button style="font-size: large;" mat-fab color="primary" matSuffix>
               <mat-icon>send</mat-icon>
             </button>
           </mat-form-field>

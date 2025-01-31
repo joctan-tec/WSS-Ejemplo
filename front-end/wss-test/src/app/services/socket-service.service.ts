@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Room } from '../models/room.model';
+import { PictochatMessage, Room } from '../models/room.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,8 @@ export class SocketServiceService {
   public readonly _newNotification: EventEmitter<{ message: string, date: Date }> = new EventEmitter();
   public readonly _roomCreated: EventEmitter<Room[]> = new EventEmitter<Room[]>();
   public readonly _roomsUpdated: EventEmitter<Room[]> = new EventEmitter<Room[]>();
-  public readonly _userJoinedRoom: EventEmitter<boolean> = new EventEmitter();
+  public readonly _userJoinedRoom: EventEmitter<{ message: string, date: Date }> = new EventEmitter();
+  public readonly _newMessages: EventEmitter<PictochatMessage> = new EventEmitter();
 
   constructor() { }
 
@@ -41,8 +42,12 @@ export class SocketServiceService {
       });
 
       // Escuchar cuando un usuario se une a una sala
-      this.io.on('USER_JOINED_ROOM', (success: boolean) => {
-        this._userJoinedRoom.emit(success);
+      this.io.on('USER_JOINED_ROOM', (notification) => {
+        this._userJoinedRoom.emit(notification);
+      });
+
+      this.io.on('NEW_MESSAGE', (message) => {
+        this._newMessages.emit(message);
       });
     }
   }
@@ -54,6 +59,10 @@ export class SocketServiceService {
 
   public get roomCreated() {
     return this._roomCreated;
+  }
+
+  public sendNewMessage(content: string, username: string) {
+    this.io?.emit('NEW_MESSAGE', JSON.stringify({ content, username }));
   }
 
   

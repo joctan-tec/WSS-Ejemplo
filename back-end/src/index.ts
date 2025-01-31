@@ -82,14 +82,16 @@ io.on('connection', (socket: Socket) => {
 
   socket.on(RequestsTopics.NEW_MESSAGE, (newMessage) => {
     const userRepository = new UserRepository();
+    const roomRepository = new RoomRepository();
     const newMessageUseCase: SendMessageUseCase = new SendMessageUseCase(
       socket,
-      userRepository
+      userRepository,
+      roomRepository
     );
-
+    const newMessageRequest = JSON.parse(newMessage);
     newMessageUseCase.handle({
-      content: newMessage.content,
-      username: newMessage.userId
+      content: newMessageRequest.content,
+      username: newMessageRequest.username
     });
   });
 

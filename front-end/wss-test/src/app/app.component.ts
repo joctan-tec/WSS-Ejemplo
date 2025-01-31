@@ -1,4 +1,4 @@
-import { AfterViewChecked, AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewChecked, AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SocketServiceService } from './services/socket-service.service';
@@ -24,7 +24,6 @@ export class AppComponent implements OnInit {
   status = false;
   message = '';
   username = 'Juan';
-  public joinSuccess: boolean | null = null;
 
   notifications: { message: string, date: Date }[] = []
 
@@ -39,8 +38,25 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {}
 
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+  private scrollToBottom(): void {
+    try {
+      this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+    } catch (err) {
+      console.error('Error en autoscroll:', err);
+    }
+  }
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
   sendMessage() {
-    console.log('Sending message');
+    if (!this.message) {
+      return;
+    }
+    this.socketService.sendNewMessage(this.message, this.username);
+    this.message = '';
   }
 
   createRoom() {
@@ -71,11 +87,18 @@ export class AppComponent implements OnInit {
     this.socketService.joinRoom( this.currentRoom!.name, this.username); // Unirse a la nueva sala
   }
 
+
+
   public getMessageClass(message: PictochatMessage) {
     if (message.messageType === MessageType.notification) {
-      return ['justify-center rounded-lg bg-emerald-700 p-2 text-white mb-3'];
+      return ['justify-center bg-sky-600  text-white'];
     }
-    return [];
+    if (message.sentBy?.username === this.username) {
+      return ['bg-emerald-400 text-white'];
+    }else{
+      return ['bg-gray-400 text-white'];
+    }
+    
   }
 
   public connect() {
@@ -102,8 +125,8 @@ export class AppComponent implements OnInit {
         this.rooms.push(room);
       });
 
-      this.socketService.userJoinedRoom.subscribe((success: boolean) => {
-        this.joinSuccess = success;  // Actualizar el estado de la unión
+      this.socketService.userJoinedRoom.subscribe((notification) => {
+        this.notifications.push(notification);
       });
 
       this.socketService._roomsUpdated.subscribe((rooms: Room[]) => {
@@ -111,7 +134,15 @@ export class AppComponent implements OnInit {
         this.currentRoom = rooms.find((room) => room.name === this.currentRoom?.name);
       });
 
+      this.socketService._newMessages.subscribe((message: PictochatMessage) => {
+        if (this.currentRoom && message.sentBy && this.currentRoom.name === message.sentBy.currentRoom) {
+          this.currentRoom.messageHistory.push(message);
+        }
       });
+
+
+      });
+
 
       
       
